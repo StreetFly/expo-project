@@ -1,87 +1,144 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Image } from "expo-image";
+import { Platform, StyleSheet, TouchableOpacity } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { HelloWave } from "@/components/hello-wave";
+import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useResponsive } from "@/hooks/use-responsive";
+import { Link, useRouter } from "expo-router";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { isTablet } = useResponsive();
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+  return (
+    <ThemedView style={[styles.container, isTablet && styles.row]}>
+      {/* Master pane: always visible */}
+      <ThemedView style={[styles.master, isTablet && styles.masterTablet]}>
+        <ParallaxScrollView
+          headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+          headerImage={
+            <Image
+              source={require("@/assets/images/partial-react-logo.png")}
+              style={styles.reactLogo}
+            />
+          }
+        >
+          <ThemedView style={styles.titleContainer}>
+            <ThemedText type="title">Welcome!</ThemedText>
+            <HelloWave />
+          </ThemedView>
+          <ThemedView style={styles.stepContainer}>
+            <ThemedText type="subtitle">Step 1: Try it</ThemedText>
+            <ThemedText>
+              Edit{" "}
+              <ThemedText type="defaultSemiBold">
+                app/(tabs)/index.tsx
+              </ThemedText>{" "}
+              to see changes. Press{" "}
+              <ThemedText type="defaultSemiBold">
+                {Platform.select({
+                  ios: "cmd + d",
+                  android: "cmd + m",
+                  web: "F12",
+                })}
+              </ThemedText>{" "}
+              to open developer tools.
+            </ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.stepContainer}>
+            <Link href="/modal">
+              <Link.Trigger>
+                <ThemedText type="subtitle">Step 2: Explore</ThemedText>
+              </Link.Trigger>
+              <Link.Preview />
+              <Link.Menu>
+                <Link.MenuAction
+                  title="Action"
+                  icon="cube"
+                  onPress={() => alert("Action pressed")}
+                />
+                <Link.MenuAction
+                  title="Share"
+                  icon="square.and.arrow.up"
+                  onPress={() => alert("Share pressed")}
+                />
+                <Link.Menu title="More" icon="ellipsis">
+                  <Link.MenuAction
+                    title="Delete"
+                    icon="trash"
+                    destructive
+                    onPress={() => alert("Delete pressed")}
+                  />
+                </Link.Menu>
+              </Link.Menu>
+            </Link>
+            <ThemedText>
+              {`Tap the Explore tab to learn more about what's included in this starter app.`}
+            </ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.stepContainer}>
+            <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
+            <ThemedText>
+              {`When you're ready, run `}
+              <ThemedText type="defaultSemiBold">
+                npm run reset-project
+              </ThemedText>{" "}
+              to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
+              directory. This will move the current{" "}
+              <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
+              <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+            </ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.stepContainer}>
+            <ThemedText type="subtitle">Step 4: Demo</ThemedText>
+            <TouchableOpacity onPress={() => router.push("/demo")}>
+              <ThemedText type="defaultSemiBold">Go to Demo</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </ParallaxScrollView>
+      </ThemedView>
+
+      {/* Detail pane: only visible on tablet (flex: 0 collapses it on phone) */}
+      <ThemedView style={[styles.detail, !isTablet && styles.detailPhone]}>
+        <ThemedText style={styles.detailText}>
+          Select a step on the left to learn more.
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  row: {
+    flexDirection: "row",
+  },
+  master: {
+    flex: 1,
+  },
+  masterTablet: {
+    maxWidth: 420,
+    borderRightWidth: 1,
+    borderColor: "#ddd",
+  },
+  detail: {
+    flex: 2,
+    padding: 16,
+    justifyContent: "center",
+  },
+  detailPhone: {
+    flex: 0,
+  }, // hidden on phones
+  detailText: {
+    fontSize: 18,
+  },
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   stepContainer: {
@@ -93,6 +150,16 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
+  },
+  demoButton: {
+    backgroundColor: "#A1CEDC",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  demoButtonText: {
+    color: "#1D3D47",
   },
 });
