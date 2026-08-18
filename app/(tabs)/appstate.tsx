@@ -1,17 +1,48 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, TextInput } from 'react-native';
-
-type Task = {
-  id: number;
-  title: string;
-  completed: boolean;
-};
+import { loadTasks, saveTasks, Task } from '@/services/taskStorage';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, FlatList, Pressable, StyleSheet, TextInput } from 'react-native';
 
 export default function AppStateScreen() {
-  const[taskText, setTaskText] = useState('');
+  const [taskText, setTaskText] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksLoaded, setTasksLoaded] = useState(false);
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    async function load() {
+      const savedTasks = await loadTasks();
+
+      setTasks(savedTasks);
+      setTasksLoaded(true);
+    }
+
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (tasksLoaded) {
+      saveTasks(tasks);
+    }
+  }, [tasks, tasksLoaded]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      'change',
+      (nextAppState) => {
+        if (nextAppState === 'background') {
+          saveTasks(tasks);
+        }
+
+        appState.current = nextAppState;
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [tasks]);
 
   function addTask() {
     if (!taskText.trim()) {
