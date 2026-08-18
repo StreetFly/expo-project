@@ -1,178 +1,128 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  AppState,
-  AppStateStatus,
-  Button,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { useState } from 'react';
+import { FlatList, Pressable, StyleSheet, TextInput } from 'react-native';
 
-const STORAGE_KEY = "assignment_state";
+type Task = {
+  id: number;
+  title: string;
+  completed: boolean;
+};
 
-export default function AppStateDemo() {
-  const [text, setText] = useState("");
-  const [status, setStatus] = useState("Idle");
-  const [progress, setProgress] = useState(0);
+export default function AppStateScreen() {
+  const[taskText, setTaskText] = useState('');
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  const appState = useRef(AppState.currentState);
-  const interval = useRef<ReturnType<typeof setInterval> | null>(null);
+  function addTask() {
+    if (!taskText.trim()) {
+      return;
+    }
 
-  useEffect(() => {
-    loadState();
-  }, []);
+    let nextId = 1;
 
-  useEffect(() => {
-    saveState();
-  }, [text, progress]);
+    tasks.forEach((task) => {
+      if (task.id >= nextId) {
+        nextId = task.id + 1;
+      }
+    });
 
-  useEffect(() => {
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange
+    const newTask: Task = {
+      id: nextId,
+      title: taskText,
+      completed: false,
+    };
+
+    setTasks([...tasks, newTask]);
+    setTaskText('')
+  }
+
+  function toggleTask(id: number) {
+    setTasks(
+      tasks.map((task) => 
+      task.id === id ? {...task, completed: !task.completed} : task)
     );
-
-    return () => subscription.remove();
-  }, [progress]);
-
-  function handleAppStateChange(nextState: AppStateStatus) {
-    if (
-      appState.current === "active" &&
-      nextState.match(/inactive|background/)
-    ) {
-      pauseTask();
-      setStatus("Paused (Background)");
-      saveState();
-    }
-
-    if (
-      appState.current.match(/inactive|background/) &&
-      nextState === "active"
-    ) {
-      if (progress > 0 && progress < 100) {
-        resumeTask();
-      }
-
-      setStatus("Active");
-    }
-
-    appState.current = nextState;
-  }
-
-  async function saveState() {
-    try {
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          text,
-          progress,
-        })
-      );
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function loadState() {
-    try {
-      const saved = await AsyncStorage.getItem(STORAGE_KEY);
-
-      if (saved) {
-        const state = JSON.parse(saved);
-
-        setText(state.text);
-        setProgress(state.progress);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  function startRequest() {
-    if (interval.current) return;
-
-    setStatus("Running");
-
-    interval.current = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval.current!);
-          interval.current = null;
-          setStatus("Completed");
-          return 100;
-        }
-
-        return prev + 10;
-      });
-    }, 1000);
-  }
-
-  function pauseTask() {
-    if (interval.current) {
-      clearInterval(interval.current);
-      interval.current = null;
-    }
-  }
-
-  function resumeTask() {
-    startRequest();
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>AppState Assignment</Text>
+    <ThemedView style={styles.container}>
+      <ThemedText type="title">My Tasks</ThemedText>
 
       <TextInput
         style={styles.input}
-        placeholder="Enter some text"
-        value={text}
-        onChangeText={setText}
+        placeholder="Enter a task"
+        value={taskText}
+        onChangeText={setTaskText}
       />
 
-      <Text style={styles.text}>
-        Saved Text: {text || "(empty)"}
-      </Text>
+      <Pressable style={styles.button} onPress={addTask}>
+        <ThemedText style={styles.buttonText}>Add Task</ThemedText>
+      </Pressable>
 
-      <Text style={styles.text}>
-        Progress: {progress}%
-      </Text>
-
-      <Text style={styles.text}>
-        Status: {status}
-      </Text>
-
-      <Button
-        title="Start Mock Request"
-        onPress={startRequest}
+      <FlatList
+        data={tasks}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({item}) => (
+          <Pressable
+            style={styles.task}
+            onPress={() => toggleTask(item.id)}
+          >
+            <ThemedText style={[styles.taskText, item.completed && styles.completedTask]}>
+              {item.title}
+            </ThemedText>
+          </Pressable>
+        )}
+        ListEmptyComponent={
+          <ThemedText style={styles.emptyText}>
+            No tasks yet
+          </ThemedText>
+        }
       />
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: 25,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 25,
-    textAlign: "center",
+    padding: 20,
+    paddingTop: 60,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#999",
+    borderColor: '#999',
     borderRadius: 8,
     padding: 12,
+    marginTop: 20,
+    marginBottom: 10,
+    backgroundColor: 'white',
+    color: 'black',
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
     marginBottom: 20,
   },
-  text: {
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  task: {
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#FFBF00',
+  },
+  taskText: {
     fontSize: 18,
-    marginBottom: 15,
+  },
+  completedTask: {
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    opacity: 0.6,
   },
 });
