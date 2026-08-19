@@ -61,3 +61,21 @@ export async function createTask(title: string) {
 
     return result.lastInsertRowId
 }
+
+export async function getAllTasks() {
+    const tasks = await db.getAllAsync(
+        `SELECT * FROM tasks ORDER BY id ASC`
+    );
+
+    return tasks;
+}
+
+export async function getTaskById(id: number) {
+    const task = await db.getFirstAsync(
+        `SELECT * FROM tasks
+        WHERE id = ?`,
+        id
+    );
+
+    return task;
+}
