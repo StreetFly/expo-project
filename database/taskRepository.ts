@@ -89,3 +89,11 @@ export async function updateTask(id: number, completed: number) {
         completed
     )
 }
+
+export async function deleteTask(id: number) {
+    await db.runAsync(
+        `DELETE FROM tasks
+        WHERE id = ?`,
+        id
+    )
+}
