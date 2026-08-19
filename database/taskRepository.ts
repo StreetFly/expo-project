@@ -79,3 +79,13 @@ export async function getTaskById(id: number) {
 
     return task;
 }
+
+export async function updateTask(id: number, completed: number) {
+    await db.runAsync(
+        `UPDATE tasks
+        SET completed = ?
+        WHERE id = ?`,
+        id,
+        completed
+    )
+}
