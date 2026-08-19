@@ -1,20 +1,21 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { loadTasks, saveTasks, Task } from '@/services/taskStorage';
-import { useEffect, useRef, useState } from 'react';
+import { loadTasks, loadTaskText, saveTasks, saveTaskText, Task } from '@/services/taskStorage';
+import { useEffect, useState } from 'react';
 import { AppState, FlatList, Pressable, StyleSheet, TextInput } from 'react-native';
 
 export default function AppStateScreen() {
   const [taskText, setTaskText] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoaded, setTasksLoaded] = useState(false);
-  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     async function load() {
       const savedTasks = await loadTasks();
+      const savedTaskText = await loadTaskText();
 
       setTasks(savedTasks);
+      setTaskText(savedTaskText);
       setTasksLoaded(true);
     }
 
@@ -22,27 +23,20 @@ export default function AppStateScreen() {
   }, []);
 
   useEffect(() => {
-    if (tasksLoaded) {
-      saveTasks(tasks);
-    }
-  }, [tasks, tasksLoaded]);
-
-  useEffect(() => {
     const subscription = AppState.addEventListener(
       'change',
       (nextAppState) => {
         if (nextAppState === 'background') {
           saveTasks(tasks);
+          saveTaskText(taskText);
         }
-
-        appState.current = nextAppState;
       }
     );
 
     return () => {
       subscription.remove();
     };
-  }, [tasks]);
+  }, [tasks, taskText]);
 
   function addTask() {
     if (!taskText.trim()) {
@@ -64,19 +58,21 @@ export default function AppStateScreen() {
     };
 
     setTasks([...tasks, newTask]);
-    setTaskText('')
+    setTaskText('');
   }
 
   function toggleTask(id: number) {
     setTasks(
-      tasks.map((task) => 
-      task.id === id ? {...task, completed: !task.completed} : task)
+      tasks.map((task) =>
+        task.id === id ? {...task, completed: !task.completed} : task)
     );
   }
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">My Tasks</ThemedText>
+      <ThemedText type="title">
+        My Tasks
+      </ThemedText>
 
       <TextInput
         style={styles.input}
@@ -86,7 +82,9 @@ export default function AppStateScreen() {
       />
 
       <Pressable style={styles.button} onPress={addTask}>
-        <ThemedText style={styles.buttonText}>Add Task</ThemedText>
+        <ThemedText style={styles.buttonText}>
+          Add Task
+        </ThemedText>
       </Pressable>
 
       <FlatList
