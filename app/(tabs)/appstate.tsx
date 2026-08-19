@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { testDatabase } from '@/database/testDatabase';
 import { loadTasks, loadTaskText, saveTasks, saveTaskText, Task } from '@/services/taskStorage';
 import { useEffect, useState } from 'react';
 import { AppState, FlatList, Pressable, StyleSheet, TextInput } from 'react-native';
@@ -8,6 +9,10 @@ export default function AppStateScreen() {
   const [taskText, setTaskText] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoaded, setTasksLoaded] = useState(false);
+
+  useEffect(() => {
+    testDatabase();
+  }, []);
 
   useEffect(() => {
     async function load() {
