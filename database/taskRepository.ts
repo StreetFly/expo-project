@@ -1,6 +1,5 @@
 import * as SQLite from 'expo-sqlite';
 
-const DATABASE_NAME = 'tasks.db';
 const DATABASE_VERSION = 1;
 
 export type Task = {
@@ -9,48 +8,49 @@ export type Task = {
     completed: number;
     createdAt: string;
 };
-const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
 
 export async function initializeDatabase() {
-  await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS metadata (
-      key TEXT PRIMARY KEY NOT NULL,
-      value INTEGER NOT NULL
-    );
-  `);
-
-  const version = await db.getFirstAsync<{ value: number }>(
-    `SELECT value 
-    FROM metadata 
-    WHERE key = ?`,
-    'schema_version'
-  );
-
-  const currentVersion = version?.value ?? 0;
-
-  if (currentVersion < 1) {
+    const db = await SQLite.openDatabaseAsync('tasks.db');
     await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        completed INTEGER DEFAULT 0,
-        createdAt TEXT NOT NULL
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_tasks_completed
-      ON tasks(completed);
+        CREATE TABLE IF NOT EXISTS metadata (
+        key TEXT PRIMARY KEY NOT NULL,
+        value INTEGER NOT NULL
+        );
     `);
-
-    await db.runAsync(
-      `INSERT OR REPLACE INTO metadata (key, value)
-       VALUES (?, ?)`,
-      'schema_version',
-      DATABASE_VERSION
+  
+    const version = await db.getFirstAsync<{ value: number }>(
+        `SELECT value 
+        FROM metadata 
+        WHERE key = ?`,
+        'schema_version'
     );
-  }
+
+    const currentVersion = version?.value ?? 0;
+
+    if (currentVersion < 1) {
+        await db.execAsync(`
+            CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            completed INTEGER DEFAULT 0,
+            createdAt TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_tasks_completed
+            ON tasks(completed);
+        `);
+
+        await db.runAsync(
+            `INSERT OR REPLACE INTO metadata (key, value)
+            VALUES (?, ?)`,
+            'schema_version',
+            DATABASE_VERSION
+        );
+    }
 }
 
 export async function createTask(title: string) {
+    const db = await SQLite.openDatabaseAsync('tasks.db');
     const createdAt = new Date().toString();
 
     const result = await db.runAsync(
@@ -62,35 +62,28 @@ export async function createTask(title: string) {
     return result.lastInsertRowId
 }
 
-export async function getAllTasks() {
-    const tasks = await db.getAllAsync(
+export async function getAllTasks(): Promise<Task[]> {
+    const db = await SQLite.openDatabaseAsync('tasks.db');
+    const tasks = await db.getAllAsync<Task>(
         `SELECT * FROM tasks ORDER BY id ASC`
     );
 
     return tasks;
 }
 
-export async function getTaskById(id: number) {
-    const task = await db.getFirstAsync(
-        `SELECT * FROM tasks
-        WHERE id = ?`,
-        id
-    );
-
-    return task;
-}
-
 export async function updateTask(id: number, completed: number) {
+    const db = await SQLite.openDatabaseAsync('tasks.db');
     await db.runAsync(
         `UPDATE tasks
         SET completed = ?
         WHERE id = ?`,
-        id,
-        completed
+        completed,
+        id
     )
 }
 
 export async function deleteTask(id: number) {
+    const db = await SQLite.openDatabaseAsync('tasks.db');
     await db.runAsync(
         `DELETE FROM tasks
         WHERE id = ?`,
