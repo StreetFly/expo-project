@@ -37,6 +37,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="app.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="walk"
+        options={{
+          title: 'Walk',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="figure.walk" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
