@@ -40,10 +40,13 @@ const requestPermissions = async () => {
   }
 };
 
-const PermissionsButton = () => (
+const PermissionsButton = ({ title }: { title: string | null }) => (
   <View style={styles.container}>
     <Button onPress={requestPermissions}
-     title={`Enable ${Platform.OS === 'web' ? 'foreground location' : 'background location'}`} />
+     title={
+      title !== null && title !== undefined
+      ? title
+      : `Enable ${Platform.OS === 'web' ? 'foreground location' : 'background location'}`} />
   </View>
 );
 
